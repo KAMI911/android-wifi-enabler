@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Wi-Fi state permissions -->
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+
+    <!-- Network state -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+
+    <!-- Location permissions (for geofencing) -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+
+    <!-- Boot trigger -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <!-- Foreground service (Android 9+) -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <!-- Foreground service type for connectivity/device management (Android 14+) -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+
+    <!-- Post notifications (Android 13+) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- Keep CPU awake briefly during trigger processing -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <application
+        android:name=".WifiEnablerApp"
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.WifiEnabler">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!--
+            Foreground service that monitors screen state and mobile data connectivity.
+            foregroundServiceType="connectedDevice" is appropriate for Wi-Fi management.
+        -->
+        <service
+            android:name=".service.WifiEnablerService"
+            android:exported="false"
+            android:foregroundServiceType="connectedDevice" />
+
+        <!-- Starts the service automatically on device boot -->
+        <receiver
+            android:name=".receiver.BootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <!--
+            Receives geofence transition events from Google Play Services.
+            Must be exported=false and use explicit PendingIntent.
+        -->
+        <receiver
+            android:name=".receiver.GeofenceBroadcastReceiver"
+            android:exported="false" />
+
+    </application>
+</manifest>
