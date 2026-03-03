@@ -1,0 +1,23 @@
+*.iml
+.gradle
+/local.properties
+/.idea
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+
+# Keystore — NEVER commit actual signing keys
+keystore/*.jks
+keystore/*.keystore
+keystore/*.p12
+*.jks
+*.keystore
+
+# Gradle build cache (project-level)
+.gradle/
+
+# Docker
+.docker/
