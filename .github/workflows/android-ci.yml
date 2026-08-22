@@ -130,6 +130,44 @@ jobs:
           path: app/build/outputs/apk/debug/*.apk
           retention-days: 14
 
+# ── Emulator install test ────────────────────────────────────────────────────
+  emulator-install-test:
+    name: Install Test (API ${{ matrix.api-level }})
+    runs-on: ubuntu-latest
+    needs: [ build-debug ]
+    strategy:
+      fail-fast: false
+      matrix:
+        api-level: [ 26, 28, 29 ]
+
+    steps:
+      - name: Download debug APK
+        uses: actions/download-artifact@v4
+        with:
+          name: debug-apk-${{ github.run_number }}
+          path: apk
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Install on API ${{ matrix.api-level }} emulator and launch
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          target: google_apis
+          arch: x86_64
+          profile: pixel_5
+          disable-animations: true
+          script: |
+            apk_path=$(ls apk/*.apk | head -n1)
+            adb install -r "$apk_path"
+            adb shell am start -n com.kami911.wifienabler/.MainActivity
+            sleep 5
+            adb shell pidof com.kami911.wifienabler || (echo "App is not running after launch" && exit 1)
+
 # ── Release build ─────────────────────────────────────────────────────────────
   build-release:
     name: Build Release APK
