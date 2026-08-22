@@ -1,9 +1,14 @@
 package com.kami911.wifienabler.ui.settings
 
 import android.Manifest
+import android.annotation.SuppressLint
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
+import android.provider.Settings
 import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
@@ -18,6 +23,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.kami911.wifienabler.R
 import com.kami911.wifienabler.databinding.FragmentSettingsBinding
+import com.kami911.wifienabler.service.WifiEnablerService
 
 class SettingsFragment : Fragment() {
 
@@ -81,7 +87,9 @@ class SettingsFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         viewModel.refreshWifiState()
+        healServiceIfNeeded()
         syncUiFromPrefs()
+        refreshBatteryOptimizationStatus()
     }
 
     override fun onDestroyView() {
@@ -156,6 +164,51 @@ class SettingsFragment : Fragment() {
         binding.switchDebug.setOnCheckedChangeListener { _, checked ->
             if (isUpdatingUi) return@setOnCheckedChangeListener
             viewModel.setDebugMode(checked)
+        }
+
+        binding.buttonBatteryOptimization.setOnClickListener {
+            requestBatteryOptimizationExemption()
+        }
+    }
+
+    // ── Reliability ──
+
+    /**
+     * The "service enabled" preference records what the user wants, not what is
+     * actually running — the OS can kill the foreground service (Doze, OEM power
+     * savers) without clearing it. Detect that mismatch here and self-heal.
+     */
+    private fun healServiceIfNeeded() {
+        if (viewModel.serviceEnabled.value == true && !WifiEnablerService.isRunning) {
+            WifiEnablerService.start(requireContext())
+            showSnack(getString(R.string.service_restarted_after_powersave))
+        }
+    }
+
+    private fun isIgnoringBatteryOptimizations(): Boolean {
+        val powerManager = requireContext().getSystemService(PowerManager::class.java)
+        return powerManager.isIgnoringBatteryOptimizations(requireContext().packageName)
+    }
+
+    private fun refreshBatteryOptimizationStatus() {
+        val exempted = isIgnoringBatteryOptimizations()
+        binding.textBatteryOptimizationStatus.text = getString(
+            if (exempted) R.string.battery_optimization_exempted
+            else R.string.battery_optimization_not_exempted
+        )
+        binding.buttonBatteryOptimization.isEnabled = !exempted
+    }
+
+    @SuppressLint("BatteryLife")
+    private fun requestBatteryOptimizationExemption() {
+        val intent = Intent(
+            Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+            Uri.parse("package:${requireContext().packageName}")
+        )
+        try {
+            startActivity(intent)
+        } catch (_: Exception) {
+            startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
         }
     }
 

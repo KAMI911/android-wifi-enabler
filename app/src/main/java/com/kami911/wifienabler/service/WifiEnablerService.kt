@@ -79,6 +79,7 @@ class WifiEnablerService : LifecycleService() {
 
         registerScreenReceiver()
         registerNetworkCallback()
+        isRunning = true
         Log.d(TAG, "Service started")
     }
 
@@ -104,6 +105,7 @@ class WifiEnablerService : LifecycleService() {
     override fun onDestroy() {
         unregisterScreenReceiver()
         unregisterNetworkCallback()
+        isRunning = false
         Log.d(TAG, "Service stopped")
         super.onDestroy()
     }
@@ -184,6 +186,17 @@ class WifiEnablerService : LifecycleService() {
 
     companion object {
         private const val TAG = "WifiEnablerService"
+
+        /**
+         * True while the service process is actually alive. Distinct from the
+         * "service enabled" preference: the OS (Doze, OEM battery managers) can
+         * kill this foreground service without the user's action, leaving the
+         * preference stale. Callers should compare against it, not assume the
+         * preference reflects reality.
+         */
+        @Volatile
+        var isRunning: Boolean = false
+            private set
 
         const val ACTION_STOP = "com.kami911.wifienabler.ACTION_STOP"
         const val ACTION_ENABLE_WIFI = "com.kami911.wifienabler.ACTION_ENABLE_WIFI"

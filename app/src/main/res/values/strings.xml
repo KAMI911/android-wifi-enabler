@@ -17,6 +17,7 @@
     <!-- Section headers -->
     <string name="section_triggers">Trigger Conditions</string>
     <string name="section_behaviour">Behaviour</string>
+    <string name="section_reliability">Reliability</string>
     <string name="section_debug">Debug</string>
 
     <!-- Triggers -->
@@ -38,6 +39,13 @@
     <!-- Behaviour -->
     <string name="setting_auto_disable">Auto-disable Wi-Fi</string>
     <string name="setting_auto_disable_desc">Disable Wi-Fi automatically when trigger conditions are no longer met</string>
+
+    <!-- Reliability -->
+    <string name="setting_battery_optimization">Battery optimization</string>
+    <string name="battery_optimization_exempted">Exempted — the service can keep running in the background</string>
+    <string name="battery_optimization_not_exempted">Not exempted — the system may kill the service in power-save mode, stopping all triggers until you reopen the app</string>
+    <string name="setting_battery_optimization_button">Request exemption</string>
+    <string name="service_restarted_after_powersave">The service had been stopped by the system and was just restarted</string>
 
     <!-- Debug -->
     <string name="setting_debug_mode">Debug Mode</string>
