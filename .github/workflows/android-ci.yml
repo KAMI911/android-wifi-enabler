@@ -155,13 +155,14 @@ jobs:
         run: chmod +x gradlew
 
       - name: Decode keystore
-        if: ${{ secrets.KEYSTORE_BASE64 != '' }}
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         run: |
-          mkdir -p keystore
-          echo "$KEYSTORE_BASE64" | base64 --decode > keystore/release.jks
-          echo "KEYSTORE_PATH=${{ github.workspace }}/keystore/release.jks" >> $GITHUB_ENV
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            mkdir -p keystore
+            echo "$KEYSTORE_BASE64" | base64 --decode > keystore/release.jks
+            echo "KEYSTORE_PATH=${{ github.workspace }}/keystore/release.jks" >> $GITHUB_ENV
+          fi
 
       - name: Build release APK
         env:
