@@ -188,10 +188,10 @@ class SettingsFragment : Fragment() {
 
     private fun updateGeofenceSummary() {
         if (viewModel.geofenceSet) {
-            val lat = "%.4f".format(viewModel.geofenceLat)
-            val lng = "%.4f".format(viewModel.geofenceLng)
             val r = viewModel.geofenceRadius.toInt()
-            binding.textGeofenceSummary.text = getString(R.string.geofence_summary, lat, lng, r)
+            binding.textGeofenceSummary.text = getString(
+                R.string.geofence_summary, viewModel.geofenceLat, viewModel.geofenceLng, r
+            )
             binding.textGeofenceSummary.visibility = View.VISIBLE
         } else {
             binding.textGeofenceSummary.visibility = View.GONE
