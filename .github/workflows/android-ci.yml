@@ -260,5 +260,5 @@ jobs:
             3. Open the downloaded APK and install
 
             ### Requirements
-            - Android 10 (API 29) or higher
+            - Android 8.0 (API 26) or higher
             - Google Play Services (for location/geofence trigger)
