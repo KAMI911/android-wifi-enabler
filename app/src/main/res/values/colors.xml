@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Material 3 seed colour -->
+    <color name="md_theme_primary">#1565C0</color>
+    <color name="md_theme_on_primary">#FFFFFF</color>
+    <color name="md_theme_primary_container">#D6E4FF</color>
+    <color name="md_theme_on_primary_container">#001B4E</color>
+
+    <!-- Status colours -->
+    <color name="status_active">#2E7D32</color>   <!-- Green 800 -->
+    <color name="status_inactive">#9E9E9E</color>  <!-- Grey 500 -->
+
+    <!-- Log entry colours -->
+    <color name="log_success">#388E3C</color>      <!-- Green 700 -->
+    <color name="log_failure">#D32F2F</color>      <!-- Red 700 -->
+</resources>

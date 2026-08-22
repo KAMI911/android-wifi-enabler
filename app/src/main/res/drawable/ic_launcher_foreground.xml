@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Wi-Fi icon centred in the 108dp safe zone -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,70 L46,62 L62,62 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,58 C49.03,58 44.55,60.05 41.37,63.35 L38.56,60.54 C42.54,56.41 48.06,54 54,54 C59.94,54 65.46,56.41 69.44,60.54 L66.63,63.35 C63.45,60.05 58.97,58 54,58 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,46 C45.52,46 37.87,49.64 32.5,55.5 L29.68,52.68 C35.79,46.13 44.45,42 54,42 C63.55,42 72.21,46.13 78.32,52.68 L75.5,55.5 C70.13,49.64 62.48,46 54,46 Z" />
+</vector>

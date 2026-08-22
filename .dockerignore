@@ -1,0 +1,31 @@
+# Build outputs
+app/build/
+build/
+.gradle/
+
+# IDE files
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Local config
+local.properties
+
+# Keystore files — never include in Docker context
+keystore/*.jks
+keystore/*.keystore
+*.jks
+*.keystore
+
+# CI/CD configs — not needed inside container
+.github/
+.gitlab-ci.yml

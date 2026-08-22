@@ -1,0 +1,88 @@
+# ═══════════════════════════════════════════════════════════════════════════
+#  Docker Compose — local Android build helper
+#
+#  Quick start:
+#    docker compose run --rm build-debug     # → app/build/outputs/apk/debug/
+#    docker compose run --rm build-release   # → app/build/outputs/apk/release/
+#    docker compose run --rm lint
+#    docker compose run --rm test
+#
+#  Signed release build (provide a keystore):
+#    KEYSTORE_PATH=/workspace/keystore/release.jks \
+#    STORE_PASSWORD=secret \
+#    KEY_ALIAS=mykey \
+#    KEY_PASSWORD=secret \
+#    docker compose run --rm build-release
+#
+#  Pre-build the image (optional — auto-built on first run otherwise):
+#    docker compose build android-builder
+# ═══════════════════════════════════════════════════════════════════════════
+
+name: wifi-enabler
+
+x-android-base: &android-base
+  build:
+    context: .
+    dockerfile: Dockerfile
+    args:
+      ANDROID_SDK_TOOLS_VERSION: "11076708"
+      ANDROID_COMPILE_SDK: "35"
+      ANDROID_BUILD_TOOLS: "35.0.0"
+      GRADLE_VERSION: "8.9"
+  image: wifi-enabler-android-builder:latest
+  working_dir: /workspace
+  volumes:
+    # Mount the project source into the container
+    - type: bind
+      source: .
+      target: /workspace
+    # Persistent Gradle cache — avoids re-downloading dependencies each run
+    - gradle-home-cache:/root/.gradle
+    # Separate build cache
+    - gradle-build-cache:/workspace/.gradle
+
+services:
+
+  # ── Debug build ──────────────────────────────────────────────────────────
+  build-debug:
+    <<: *android-base
+    command: gradle assembleDebug
+    environment:
+      GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.caching=true -Xmx4g"
+
+  # ── Release build ────────────────────────────────────────────────────────
+  # Set KEYSTORE_PATH, STORE_PASSWORD, KEY_ALIAS, KEY_PASSWORD in the
+  # shell environment (or via a .env file) to get a signed APK.
+  build-release:
+    <<: *android-base
+    command: gradle assembleRelease
+    environment:
+      GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.caching=true -Xmx4g"
+      KEYSTORE_PATH: "${KEYSTORE_PATH:-}"
+      STORE_PASSWORD: "${STORE_PASSWORD:-}"
+      KEY_ALIAS: "${KEY_ALIAS:-}"
+      KEY_PASSWORD: "${KEY_PASSWORD:-}"
+
+  # ── Lint ─────────────────────────────────────────────────────────────────
+  lint:
+    <<: *android-base
+    command: gradle lint
+
+  # ── Unit tests ───────────────────────────────────────────────────────────
+  test:
+    <<: *android-base
+    command: gradle test
+
+  # ── Full CI sequence (lint → test → debug) ───────────────────────────────
+  ci:
+    <<: *android-base
+    command: >
+      sh -c "gradle lint &&
+             gradle test &&
+             gradle assembleDebug"
+
+volumes:
+  gradle-home-cache:
+    driver: local
+  gradle-build-cache:
+    driver: local

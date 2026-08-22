@@ -1,0 +1,260 @@
+# ═══════════════════════════════════════════════════════════════════════════
+#  GitHub Actions — Android Wi-Fi Enabler CI/CD
+#
+#  Jobs:
+#    lint         → on every push / PR
+#    test         → on every push / PR
+#    build-debug  → on every push / PR
+#    build-release→ on push to main/master + version tags
+#    release      → on version tags only (creates a GitHub Release)
+#
+#  Required repository secrets for signed release builds:
+#    KEYSTORE_BASE64   Base-64 encoded release keystore (.jks)
+#    STORE_PASSWORD    Keystore password
+#    KEY_ALIAS         Key alias inside the keystore
+#    KEY_PASSWORD      Key password
+#
+#  Generate KEYSTORE_BASE64:
+#    base64 -w 0 release.jks   (Linux)
+#    base64 release.jks        (macOS)
+# ═══════════════════════════════════════════════════════════════════════════
+
+name: Android CI/CD
+
+on:
+  push:
+    branches: [ main, master, develop ]
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+  pull_request:
+    branches: [ main, master, develop ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  JAVA_VERSION: '17'
+  JAVA_DISTRIBUTION: 'temurin'
+  GRADLE_OPTS: '-Dorg.gradle.daemon=false -Dorg.gradle.caching=true -Xmx4g'
+
+# ── Lint ─────────────────────────────────────────────────────────────────────
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          cache: gradle
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Run lint
+        run: ./gradlew lint --stacktrace
+
+      - name: Upload lint report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-report
+          path: app/build/reports/lint-results-*.html
+          retention-days: 14
+
+# ── Unit tests ───────────────────────────────────────────────────────────────
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          cache: gradle
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Run unit tests
+        run: ./gradlew test --stacktrace
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            app/build/reports/tests/
+            app/build/test-results/
+          retention-days: 14
+
+# ── Debug build ───────────────────────────────────────────────────────────────
+  build-debug:
+    name: Build Debug APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          cache: gradle
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Build debug APK
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-apk-${{ github.run_number }}
+          path: app/build/outputs/apk/debug/*.apk
+          retention-days: 14
+
+# ── Release build ─────────────────────────────────────────────────────────────
+  build-release:
+    name: Build Release APK
+    runs-on: ubuntu-latest
+    needs: [ lint, test ]
+    if: |
+      startsWith(github.ref, 'refs/tags/v') ||
+      github.ref == 'refs/heads/main' ||
+      github.ref == 'refs/heads/master'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          cache: gradle
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Decode keystore
+        if: ${{ secrets.KEYSTORE_BASE64 != '' }}
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          mkdir -p keystore
+          echo "$KEYSTORE_BASE64" | base64 --decode > keystore/release.jks
+          echo "KEYSTORE_PATH=${{ github.workspace }}/keystore/release.jks" >> $GITHUB_ENV
+
+      - name: Build release APK
+        env:
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: ./gradlew assembleRelease --stacktrace
+
+      - name: Upload release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-apk-${{ github.run_number }}
+          path: app/build/outputs/apk/release/*.apk
+          retention-days: 30
+
+# ── Docker image build ────────────────────────────────────────────────────────
+  build-docker:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'push' &&
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}/android-builder
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix=sha-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+# ── GitHub Release ────────────────────────────────────────────────────────────
+  github-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [ build-release ]
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download release APK
+        uses: actions/download-artifact@v4
+        with:
+          name: release-apk-${{ github.run_number }}
+          path: release-artifacts/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release-artifacts/*.apk
+          generate_release_notes: true
+          draft: false
+          prerelease: >-
+            ${{
+              contains(github.ref_name, '-alpha') ||
+              contains(github.ref_name, '-beta') ||
+              contains(github.ref_name, '-rc')
+            }}
+          body: |
+            ## Wi-Fi Enabler ${{ github.ref_name }}
+
+            ### Installation
+            1. Download the APK below
+            2. On your Android device: **Settings → Security → Unknown sources** (enable)
+            3. Open the downloaded APK and install
+
+            ### Requirements
+            - Android 10 (API 29) or higher
+            - Google Play Services (for location/geofence trigger)

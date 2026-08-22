@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Wi-Fi Enabler</string>
+
+    <!-- Navigation -->
+    <string name="nav_settings">Settings</string>
+    <string name="nav_logs">Logs</string>
+
+    <!-- Service status -->
+    <string name="service_title">Wi-Fi Enabler Service</string>
+    <string name="service_status_active">Active</string>
+    <string name="service_status_inactive">Inactive</string>
+    <string name="wifi_current_state">Wi-Fi is currently:</string>
+    <string name="wifi_status_on">ON</string>
+    <string name="wifi_status_off">OFF</string>
+
+    <!-- Section headers -->
+    <string name="section_triggers">Trigger Conditions</string>
+    <string name="section_behaviour">Behaviour</string>
+    <string name="section_debug">Debug</string>
+
+    <!-- Triggers -->
+    <string name="trigger_screen_on">Screen ON</string>
+    <string name="trigger_screen_on_desc">Enable Wi-Fi when the screen turns on</string>
+
+    <string name="trigger_unlock">Device Unlock</string>
+    <string name="trigger_unlock_desc">Enable Wi-Fi when the device is unlocked</string>
+
+    <string name="trigger_location">Location / Geofence</string>
+    <string name="trigger_location_desc">Enable Wi-Fi when entering a specific area</string>
+
+    <string name="trigger_mobile_data">Mobile Data ON</string>
+    <string name="trigger_mobile_data_desc">Enable Wi-Fi when mobile data becomes active</string>
+
+    <string name="trigger_boot">Device Boot</string>
+    <string name="trigger_boot_desc">Enable Wi-Fi automatically after device restarts</string>
+
+    <!-- Behaviour -->
+    <string name="setting_auto_disable">Auto-disable Wi-Fi</string>
+    <string name="setting_auto_disable_desc">Disable Wi-Fi automatically when trigger conditions are no longer met</string>
+
+    <!-- Debug -->
+    <string name="setting_debug_mode">Debug Mode</string>
+    <string name="setting_debug_mode_desc">Record all events in the Logs tab</string>
+
+    <!-- Geofence dialog -->
+    <string name="geofence_dialog_title">Set Location Trigger</string>
+    <string name="geofence_latitude">Latitude (e.g. 51.5074)</string>
+    <string name="geofence_longitude">Longitude (e.g. -0.1278)</string>
+    <string name="geofence_radius_hint">Radius in metres (e.g. 500)</string>
+    <string name="geofence_set_button">Configure</string>
+    <string name="geofence_summary">%.4f, %.4f — radius %d m</string>
+    <string name="geofence_saved">Location trigger saved</string>
+    <string name="geofence_invalid_input">Please enter valid coordinates and a positive radius</string>
+    <string name="geofence_error">Geofence error: %s</string>
+
+    <!-- Actions -->
+    <string name="action_save">Save</string>
+    <string name="action_clear">Clear</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_clear_logs">Clear logs</string>
+
+    <!-- Logs screen -->
+    <string name="logs_empty">No log entries yet.\nEnable the service and trigger conditions to start logging.</string>
+    <string name="logs_clear_title">Clear logs</string>
+    <string name="logs_clear_message">Delete all log entries? This cannot be undone.</string>
+
+    <!-- Notifications -->
+    <string name="notification_channel_service">Service Status</string>
+    <string name="notification_channel_service_desc">Persistent notification while the Wi-Fi Enabler service is running</string>
+    <string name="notification_channel_wifi_action">Wi-Fi Action Required</string>
+    <string name="notification_channel_wifi_action_desc">Shown when Wi-Fi cannot be enabled automatically</string>
+    <string name="notification_service_title">Wi-Fi Enabler is running</string>
+    <string name="notification_service_text">Monitoring trigger conditions in the background</string>
+    <string name="notification_wifi_prompt_title">Enable Wi-Fi</string>
+    <string name="notification_wifi_prompt_text">Trigger: %s — tap to enable Wi-Fi</string>
+    <string name="notification_enable_wifi">Open Wi-Fi settings</string>
+
+    <!-- Permissions -->
+    <string name="permission_location_denied">Location permission is required for the geofence trigger</string>
+    <string name="permission_background_location_denied">Background location permission is required to detect geofence while the app is not open</string>
+</resources>

@@ -1,0 +1,8 @@
+# Never commit actual keystore files
+*.jks
+*.keystore
+*.p12
+*.pfx
+
+# Allow the placeholder README
+!README.md
