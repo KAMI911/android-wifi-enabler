@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.SharedPreferences
 import android.content.pm.ServiceInfo
 import android.net.ConnectivityManager
 import android.net.Network
@@ -26,6 +27,25 @@ class WifiEnablerService : LifecycleService() {
 
     private lateinit var prefs: PreferencesManager
     private lateinit var connectivityManager: ConnectivityManager
+
+    /** True while [cellularCallback] is actually registered with [connectivityManager]. */
+    private var cellularCallbackRegistered = false
+
+    /** Wall-clock time of the last log-pruning DELETE; see [appendLog]. */
+    private var lastPruneTime = 0L
+
+    /**
+     * Reacts live to the "mobile data" trigger being flipped in Settings so the
+     * cellular NetworkCallback — an idle binder to ConnectivityService that costs
+     * a little battery/memory while held — is only registered when that trigger
+     * is actually enabled, without requiring a service restart.
+     */
+    private val prefsChangeListener =
+        SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (key == PreferencesManager.KEY_TRIGGER_MOBILE_DATA) {
+                if (prefs.triggerMobileData) registerNetworkCallback() else unregisterNetworkCallback()
+            }
+        }
 
     // ── Screen / Unlock receiver (registered dynamically; cannot use manifest for these) ──
 
@@ -78,7 +98,8 @@ class WifiEnablerService : LifecycleService() {
         )
 
         registerScreenReceiver()
-        registerNetworkCallback()
+        prefs.registerChangeListener(prefsChangeListener)
+        if (prefs.triggerMobileData) registerNetworkCallback()
         isRunning = true
         Log.d(TAG, "Service started")
     }
@@ -104,6 +125,7 @@ class WifiEnablerService : LifecycleService() {
 
     override fun onDestroy() {
         unregisterScreenReceiver()
+        prefs.unregisterChangeListener(prefsChangeListener)
         unregisterNetworkCallback()
         isRunning = false
         Log.d(TAG, "Service stopped")
@@ -137,9 +159,14 @@ class WifiEnablerService : LifecycleService() {
                     message = if (success) "Wi-Fi $action successful" else "Wi-Fi $action failed (may require user action)"
                 )
             )
-            // Prune entries older than 7 days to keep storage small
-            val weekAgo = System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000L
-            db.logDao().deleteOlderThan(weekAgo)
+            // Prune entries older than 7 days, but at most once per day — running a
+            // DELETE on every single trigger is unnecessary disk churn for a service
+            // that's meant to stay resident and idle most of the time.
+            val now = System.currentTimeMillis()
+            if (now - lastPruneTime >= PRUNE_INTERVAL_MS) {
+                db.logDao().deleteOlderThan(now - LOG_RETENTION_MS)
+                lastPruneTime = now
+            }
         }
     }
 
@@ -166,26 +193,32 @@ class WifiEnablerService : LifecycleService() {
     }
 
     private fun registerNetworkCallback() {
+        if (cellularCallbackRegistered) return
         val request = NetworkRequest.Builder()
             .addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)
             .build()
         try {
             connectivityManager.registerNetworkCallback(request, cellularCallback)
+            cellularCallbackRegistered = true
         } catch (e: Exception) {
             Log.e(TAG, "Failed to register network callback", e)
         }
     }
 
     private fun unregisterNetworkCallback() {
+        if (!cellularCallbackRegistered) return
         try {
             connectivityManager.unregisterNetworkCallback(cellularCallback)
         } catch (_: Exception) { /* already unregistered */ }
+        cellularCallbackRegistered = false
     }
 
     // ── Static helpers ──
 
     companion object {
         private const val TAG = "WifiEnablerService"
+        private const val LOG_RETENTION_MS = 7 * 24 * 60 * 60 * 1000L
+        private const val PRUNE_INTERVAL_MS = 24 * 60 * 60 * 1000L
 
         /**
          * True while the service process is actually alive. Distinct from the

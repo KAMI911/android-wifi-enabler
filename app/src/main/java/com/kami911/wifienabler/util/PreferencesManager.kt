@@ -57,13 +57,23 @@ class PreferencesManager(context: Context) {
         get() = prefs.getBoolean(KEY_GEOFENCE_SET, false)
         set(value) = prefs.edit { putBoolean(KEY_GEOFENCE_SET, value) }
 
+    /**
+     * Lets the service react live to a trigger being flipped in Settings (e.g. to
+     * register/unregister the cellular NetworkCallback) without needing a restart.
+     */
+    fun registerChangeListener(listener: SharedPreferences.OnSharedPreferenceChangeListener) =
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+
+    fun unregisterChangeListener(listener: SharedPreferences.OnSharedPreferenceChangeListener) =
+        prefs.unregisterOnSharedPreferenceChangeListener(listener)
+
     companion object {
         private const val PREFS_NAME = "wifi_enabler_prefs"
         private const val KEY_SERVICE_ENABLED = "service_enabled"
         private const val KEY_TRIGGER_SCREEN_ON = "trigger_screen_on"
         private const val KEY_TRIGGER_UNLOCK = "trigger_unlock"
         private const val KEY_TRIGGER_LOCATION = "trigger_location"
-        private const val KEY_TRIGGER_MOBILE_DATA = "trigger_mobile_data"
+        const val KEY_TRIGGER_MOBILE_DATA = "trigger_mobile_data"
         private const val KEY_TRIGGER_BOOT = "trigger_boot"
         private const val KEY_AUTO_DISABLE = "auto_disable"
         private const val KEY_DEBUG_MODE = "debug_mode"

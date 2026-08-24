@@ -83,6 +83,14 @@
                         android:textAppearance="?attr/textAppearanceBodySmall"
                         android:textColor="?attr/colorOnSurfaceVariant" />
 
+                    <ImageView
+                        android:id="@+id/icon_wifi_status"
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:layout_marginEnd="6dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_wifi_off" />
+
                     <TextView
                         android:id="@+id/text_wifi_status"
                         android:layout_width="wrap_content"

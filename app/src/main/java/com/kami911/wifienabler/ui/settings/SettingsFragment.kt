@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.ColorStateList
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -108,6 +109,15 @@ class SettingsFragment : Fragment() {
         viewModel.wifiCurrentlyEnabled.observe(viewLifecycleOwner) { enabled ->
             binding.textWifiStatus.text =
                 getString(if (enabled) R.string.wifi_status_on else R.string.wifi_status_off)
+            binding.iconWifiStatus.setImageResource(
+                if (enabled) R.drawable.ic_wifi else R.drawable.ic_wifi_off
+            )
+            binding.iconWifiStatus.imageTintList = ColorStateList.valueOf(
+                ContextCompat.getColor(
+                    requireContext(),
+                    if (enabled) R.color.status_active else R.color.status_inactive
+                )
+            )
         }
 
         viewModel.snackMessage.observe(viewLifecycleOwner) { msg ->
