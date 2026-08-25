@@ -275,6 +275,7 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          name: "Wi-Fi Enabler ${{ github.ref_name }}"
           files: release-artifacts/*.apk
           generate_release_notes: true
           draft: false
