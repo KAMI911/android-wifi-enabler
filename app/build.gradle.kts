@@ -12,8 +12,8 @@ android {
         applicationId = "com.kami911.wifienabler"
         minSdk = 28
         targetSdk = 31
-        versionCode = 7
-        versionName = "0.0.7"
+        versionCode = 5
+        versionName = "0.0.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
