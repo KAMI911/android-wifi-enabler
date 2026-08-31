@@ -10,10 +10,10 @@ android {
 
     defaultConfig {
         applicationId = "com.kami911.wifienabler"
-        minSdk = 26
-        targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        minSdk = 28
+        targetSdk = 31
+        versionCode = 7
+        versionName = "0.0.7-alpha"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -31,6 +31,18 @@ android {
                 keyAlias = System.getenv("KEY_ALIAS") ?: ""
                 keyPassword = System.getenv("KEY_PASSWORD") ?: ""
             }
+        }
+    }
+
+    flavorDimensions.add("ui")
+    productFlavors {
+        create("original") {
+            dimension = "ui"
+            applicationIdSuffix = ""
+        }
+        create("redesign") {
+            dimension = "ui"
+            applicationIdSuffix = ".redesign"
         }
     }
 
@@ -87,4 +99,10 @@ dependencies {
     implementation(libs.play.services.location)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.recyclerview)
+
+    // Material Design 3
+    implementation("androidx.compose.material3:material3:1.2.0")
+
+    // Dark mode & accessibility
+    implementation("androidx.appcompat:appcompat:1.7.0")
 }
